@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const categories = ['All', 'Burgers', 'Pizza', 'Salads', 'Desserts']
 
@@ -57,6 +57,22 @@ function App() {
   const [activeCategory, setActiveCategory] = useState('All')
   const [search, setSearch] = useState('')
   const [quantities, setQuantities] = useState({})
+  const [isLoginOpen, setIsLoginOpen] = useState(false)
+  const [loginMessage, setLoginMessage] = useState('')
+
+  useEffect(() => {
+    if (!isLoginOpen) return undefined
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setIsLoginOpen(false)
+        setLoginMessage('')
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isLoginOpen])
 
   const visibleDishes = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -108,7 +124,16 @@ function App() {
         </nav>
 
         <div className="account-actions">
-          <a className="login-link" href="#login">Log in</a>
+          <button
+            className="login-link"
+            type="button"
+            onClick={() => {
+              setLoginMessage('')
+              setIsLoginOpen(true)
+            }}
+          >
+            Log in
+          </button>
           <button className="cart-button" type="button" aria-label={`Cart, ${cartCount} items`}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M3 4h2l2.2 10.1a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6" />
@@ -120,6 +145,69 @@ function App() {
           </button>
         </div>
       </header>
+
+      {isLoginOpen && (
+        <div
+          className="login-overlay"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsLoginOpen(false)
+              setLoginMessage('')
+            }
+          }}
+        >
+          <section
+            className="login-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="login-title"
+          >
+            <button
+              className="login-close"
+              type="button"
+              aria-label="Close login form"
+              onClick={() => {
+                setIsLoginOpen(false)
+                setLoginMessage('')
+              }}
+            >
+              ×
+            </button>
+            <span className="section-kicker">WELCOME BACK</span>
+            <h2 id="login-title">Log in to <span>savora.</span></h2>
+            <p className="login-description">Sign in to make your next meal even easier.</p>
+            <form
+              className="login-form"
+              onSubmit={(event) => {
+                event.preventDefault()
+                setLoginMessage('Login is not connected yet. Please check back soon.')
+              }}
+            >
+              <label htmlFor="login-email">Email address</label>
+              <input
+                autoFocus
+                id="login-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                required
+              />
+              <label htmlFor="login-password">Password</label>
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                required
+              />
+              <button className="login-submit" type="submit">Log in</button>
+              {loginMessage && <p className="login-message" role="status">{loginMessage}</p>}
+            </form>
+          </section>
+        </div>
+      )}
 
       <main id="main">
         <section className="hero-section" aria-labelledby="hero-title">
